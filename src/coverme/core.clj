@@ -14,9 +14,13 @@
   ;; (println)
   ;; (pprint (take 3 tracks))
   (let [trim-fn (fn [track]
-                  (let [first-artist (-> track (get "artists") first (get "name"))]
+                  (let [artist (-> track (get "artists") first)
+                        href (get track "href")]
                     (merge (select-keys track ["name" "popularity"])
-                           {"artists" first-artist})))]
+                           {"artists" (get artist "name")
+                            ;; "artists-href" (get artist "href")
+                            ;; "name-href" (get track "href")
+                            })))]
     (map trim-fn tracks)))
 
 (defn sort-tracks
@@ -41,6 +45,7 @@
   (-> (str "artist%3a" (str-to-web artist))
       get-tracks
       (unique-tracks "name")
+      ((fn [tracks] (map #(assoc % "artists" artist) tracks)))
       sort-tracks))
 
 (defn get-tracks-by-title
@@ -49,13 +54,14 @@
   (-> (str "track%3a" (str-to-web title))
       get-tracks
       (unique-tracks "artists")
+      ((fn [tracks] (map #(assoc % "name" title) tracks)))
       sort-tracks))
 
 (defn -main
   "I don't do a whole lot."
   [& x]
   (let [tracks-by-artist (get-tracks-by-artist "Nina Simone")
-        tracks-by-name   (get-tracks-by-title  "I put a a spell on you")]
+        tracks-by-name   (get-tracks-by-title  "I Put A Spell On You")]
     (println)
     (pprint (take 5 tracks-by-artist))
     (println)
