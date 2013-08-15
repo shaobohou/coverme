@@ -42,7 +42,7 @@
 
 (defn get-tracks
   [q]
-  (Thread/sleep 1000)
+  (Thread/sleep 200)
   (let [query  (str "http://ws.spotify.com/search/1/track.json?q=" q)
         tracks (second (second (json/parse-string (:body (client/get query)))))]
     ;; (println query)
@@ -73,17 +73,18 @@
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
   (let [artists-tracks (take 5 (filter #(not (.startsWith (get % "name") title)) (get-tracks-by-artists artists)))
-        rand-song      (first (shuffle artists-tracks)) ;; different song by the same artist
-        new-title      (get rand-song "name")
-        title-tracks   (take 5 (filter #(not (.startsWith (get % "artists") artists)) (get-tracks-by-title new-title)))
-        _              (println (count title-tracks) "new songs")
-        rand-song2     (first (shuffle title-tracks)) ;; different song by a different artist
-        new-artists    (get rand-song2 "artists")
-        ]
+        cover-tracks  (sort-tracks (apply concat (map (fn [track] (->> (get track "name")
+                                                                        get-tracks-by-title
+                                                                        (filter #(not= (get % "artists") artists))
+                                                                        (take 5)))
+                                                       artists-tracks)))
+        rand-song   (first (shuffle (take 5 cover-tracks))) ;; different song by a different artist
+        new-artists (get rand-song "artists")
+        new-title   (get rand-song "name")]
     (println new-title " BY " artists " WAS ALSO COVERED BY " new-artists)
-    (pprint rand-song2)
+    (pprint rand-song)
     (println)
-    (cons rand-song2
+    (cons rand-song
           (lazy-seq (generate-playlist-from-artists (sanitise-title new-artists) (sanitise-title new-title))))))
 
 (defn -main
