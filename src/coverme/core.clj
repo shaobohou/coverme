@@ -7,7 +7,7 @@
 
 (defn sanitise-title
   [title]
-  (-> (first (string/split title #"[-(]"))
+  (-> (first (string/split title #"[-(\[]"))
       (string/trim)
       (string/replace #"&" "")))
 
@@ -54,6 +54,7 @@
   (-> (str "artist%3a" (str-to-web artists))
       get-tracks
       (unique-tracks "name")
+      ((fn [tracks] (filter #(= (get % "artists") artists) tracks)))
       ((fn [tracks] (map #(assoc % "artists" artists) tracks)))
       sort-tracks))
 
@@ -64,17 +65,17 @@
     (-> (str "track%3a" (str-to-web title))
         get-tracks
         (unique-tracks "artists")
+        ((fn [tracks] (filter #(= (get % "name") title) tracks)))
         ((fn [tracks] (map #(assoc % "name" title) tracks)))
         sort-tracks)))
 
 (defn generate-playlist-from-artists
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
-  (println)
-  (let [artists-tracks (take 5 (filter #(not= (get % "name") title) (get-tracks-by-artists artists)))
+  (let [artists-tracks (take 5 (filter #(not (.startsWith (get % "name") title)) (get-tracks-by-artists artists)))
         rand-song      (first (shuffle artists-tracks)) ;; different song by the same artist
         new-title      (get rand-song "name")
-        title-tracks   (take 5 (filter #(not= (get % "artists") artists) (get-tracks-by-title new-title)))
+        title-tracks   (take 5 (filter #(not (.startsWith (get % "artists") artists)) (get-tracks-by-title new-title)))
         _              (println (count title-tracks) "new songs")
         rand-song2     (first (shuffle title-tracks)) ;; different song by a different artist
         new-artists    (get rand-song2 "artists")
@@ -88,12 +89,12 @@
 (defn -main
   "I don't do a whole lot."
   [& [artists title ntracks]]
-  ;; (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
-  ;;       tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
-  ;;   (println)
-  ;;   (pprint (take 5 tracks-by-artists))
-  ;;   (println)
-  ;;   (pprint (take 5 tracks-by-name)))
+  (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
+        tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
+    (println)
+    (pprint (take 5 tracks-by-artists))
+    (println)
+    (pprint (take 5 tracks-by-name)))
 
   (println "\n\n\n")
   (pprint (str artists))
