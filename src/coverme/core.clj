@@ -25,7 +25,7 @@
                     (merge (select-keys track ["name" "popularity"])
                            {"artists" (get artists "name")
                             ;; "artists-href" (get artists "href")
-                            ;; "name-href" (get track "href")
+                            "href" (get track "href")
                             })))]
     (map trim-fn tracks)))
 
@@ -43,9 +43,10 @@
 (defn get-tracks
   [q]
   (Thread/sleep 1000)
-  (let [query (str "http://ws.spotify.com/search/1/track.json?q=" q)]
+  (let [query  (str "http://ws.spotify.com/search/1/track.json?q=" q)
+        tracks (second (second (json/parse-string (:body (client/get query)))))]
     ;; (println query)
-    (trim-tracks (second (second (json/parse-string (:body (client/get query))))))))
+    (filter #(> (Double/parseDouble (get % "popularity")) 0.10) (trim-tracks tracks))))
 
 (defn get-tracks-by-artists
   "unique by track name"
@@ -74,7 +75,7 @@
         rand-song      (first (shuffle artists-tracks)) ;; different song by the same artist
         new-title      (get rand-song "name")
         title-tracks   (take 5 (filter #(not= (get % "artists") artists) (get-tracks-by-title new-title)))
-        _ (println (count title-tracks) "new songs")
+        _              (println (count title-tracks) "new songs")
         rand-song2     (first (shuffle title-tracks)) ;; different song by a different artist
         new-artists    (get rand-song2 "artists")
         ]
@@ -82,7 +83,7 @@
     (pprint rand-song2)
     (println)
     (cons rand-song2
-          (lazy-seq (generate-playlist-from-artists new-artists (sanitise-title new-title))))))
+          (lazy-seq (generate-playlist-from-artists (sanitise-title new-artists) (sanitise-title new-title))))))
 
 (defn -main
   "I don't do a whole lot."
