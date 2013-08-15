@@ -6,6 +6,12 @@ A Clojure library designed to ... well, that part is up to you.
 
 FIXME
 
+## TODO
+
+ * make playlist generator properly lazy
+ * expose as web service
+ * allow query via artist name, track name or spotify uri
+
 ## License
 
 Copyright © 2013 FIXME
