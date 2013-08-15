@@ -7,7 +7,7 @@
 
 (defn trim-title
   [title]
-  (string/trim (first (string/split title #"-"))))
+  (string/trim (first (string/split title #"[-(/]"))))
 
 (defn str-to-web
   [s]
@@ -40,6 +40,7 @@
 
 (defn get-tracks
   [q]
+  (Thread/sleep 1000)
   (let [query (str "http://ws.spotify.com/search/1/track.json?q=" q)]
     (trim-tracks (second (second (json/parse-string (:body (client/get query))))))))
 
@@ -65,7 +66,6 @@
 (defn generate-playlist-from-artists
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
-  (Thread/sleep 1000)
   (let [artists-tracks (take 5 (filter #(not= (get % "name") title) (get-tracks-by-artists artists)))
         rand-song      (first (shuffle artists-tracks))
         new-title      (trim-title (get rand-song "name"))
@@ -82,17 +82,23 @@
 
 (defn -main
   "I don't do a whole lot."
-  [& x]
-  (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
-        tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
-    (println)
-    (pprint (take 5 tracks-by-artists))
-    (println)
-    (pprint (take 5 tracks-by-name)))
+  [& [artists title ntracks]]
+  ;; (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
+  ;;       tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
+  ;;   (println)
+  ;;   (pprint (take 5 tracks-by-artists))
+  ;;   (println)
+  ;;   (pprint (take 5 tracks-by-name)))
 
   (println "\n\n\n")
-  
+  (pprint (str artists))
+  (pprint (str title))
+  (pprint (Integer/parseInt ntracks))
   (println "\n\n\n")
-  (print (count (take 10 (generate-playlist-from-artists "Nina Simone" ""))))
+  (println (trim-title "Secret Crush (feat. Jeff Lorber)"))
+  (println (trim-title "Secret Crush - Blah"))
+  (println (trim-title "Secret Crush / Blah"))
+  (println "\n\n\n")
+  (print (count (take (Integer/parseInt ntracks) (generate-playlist-from-artists artists title))))
   (println "\n\n\nFinished!!!!")
   )
