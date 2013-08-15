@@ -11,6 +11,8 @@ FIXME
  * make playlist generator properly lazy
  * expose as web service
  * allow query via artist name, track name or spotify uri
+ * favour more popular songs
+ * prevent repeats
 
 ## License
 
