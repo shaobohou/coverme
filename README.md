@@ -13,6 +13,7 @@ FIXME
  * allow query via artist name, track name or spotify uri
  * favour more popular songs
  * prevent repeats
+ * search artist tracks by artist href
 
 ## License
 
