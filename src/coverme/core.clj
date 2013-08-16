@@ -34,7 +34,7 @@
   (reverse (sort-by #(get % "popularity") tracks)))
 
 (defn unique-tracks
-  [tracks field]
+  [field tracks]
   ;; (println)
   ;; (pprint (take 3 tracks))
   (let [groups (group-by #(get % field) tracks)]
@@ -51,22 +51,22 @@
 (defn get-tracks-by-artists
   "unique by track name"
   [artists]
-  (-> (str "artist%3a" (str-to-web artists))
+  (->> (str "artist%3a" (str-to-web artists))
       get-tracks
       (unique-tracks "name")
-      ((fn [tracks] (filter #(= (get % "artists") artists) tracks)))
-      ((fn [tracks] (map #(assoc % "artists" artists) tracks)))
+      (filter #(= (get % "artists") artists))
+      (map #(assoc % "artists" artists))
       sort-tracks))
 
 (defn get-tracks-by-title
   "unique by artists name"
   [full-title]
   (let [title (sanitise-title full-title)]
-    (-> (str "track%3a" (str-to-web title))
+    (->> (str "track%3a" (str-to-web title))
         get-tracks
         (unique-tracks "artists")
-        ((fn [tracks] (filter #(= (get % "name") title) tracks)))
-        ((fn [tracks] (map #(assoc % "name" title) tracks)))
+        (filter #(= (get % "name") title))
+        (map #(assoc % "name" title))
         sort-tracks)))
 
 (defn generate-playlist-from-artists
@@ -84,8 +84,8 @@
     (println new-title " BY " artists " WAS ALSO COVERED BY " new-artists)
     (pprint rand-song)
     (println)
-    (cons rand-song
-          (lazy-seq (generate-playlist-from-artists (sanitise-title new-artists) (sanitise-title new-title))))))
+    (lazy-seq (cons rand-song
+                    (generate-playlist-from-artists new-artists (sanitise-title new-title))))))
 
 (defn -main
   "I don't do a whole lot."
@@ -105,6 +105,7 @@
   (println (sanitise-title "Secret Crush (feat. Jeff Lorber)"))
   (println (sanitise-title "Secret Crush - Blah"))
   (println (sanitise-title "Secret Crush / Blah"))
+  (generate-playlist-from-artists "Nina Simone" "_")
   (println "\n\n\n")
   (let [retval (take (Integer/parseInt ntracks) (generate-playlist-from-artists artists title))]
     (pprint (count retval)))
