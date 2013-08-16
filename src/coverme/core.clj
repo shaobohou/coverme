@@ -72,16 +72,20 @@
         (map #(assoc % "name" title))
         sort-tracks)))
 
+(defn get-cover-tracks
+  [track n]
+  (->> (get track "name")
+       get-tracks-by-title
+       (filter #(not= (get % "artists") (get track "artists")))
+       (take n)))
+
 (defn generate-playlist-from-artists
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
   (let [artists-tracks (take 5 (filter #(not (.startsWith (get % "name") title)) (get-tracks-by-artists artists)))
-        cover-tracks   (sort-tracks (apply concat (map (fn [track] (->> (get track "name")
-                                                                        get-tracks-by-title
-                                                                        (filter #(not= (get % "artists") artists))
-                                                                        (take 5)))
-                                                       artists-tracks)))
-        rand-song   (first (shuffle (take 5 cover-tracks)))]
+        cover-tracks   (take 5 (sort-tracks (apply concat (map #(get-cover-tracks % 5) artists-tracks))))
+        rand-song      (first (shuffle cover-tracks))]
+    (println (count artists-tracks) (count cover-tracks))
     (when rand-song
       (println (get rand-song "name") " BY " artists " WAS ALSO COVERED BY " (get rand-song "artists"))
       (pprint rand-song)
