@@ -93,7 +93,7 @@
 
 (defroutes app-routes
   (GET "/" [] (str "Cover Me!"))
-  (GET "/:id" [id] (interleave (repeat "\n") (take 10 (generate-playlist-from-artists id "_"))))
+  (GET "/:id" [id] (interpose "<p>" (take 10 (generate-playlist-from-artists id "_"))))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
