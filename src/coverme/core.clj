@@ -41,7 +41,7 @@
   (Thread/sleep 200)
   (let [query  (str "http://ws.spotify.com/search/1/track.json?" q)
         retval (client/get query {:throw-exceptions false})
-        tracks (walk/keywordize-keys (second (second (json/parse-string (:body retval)))))]
+        {:keys [info tracks]} (walk/keywordize-keys (json/parse-string (:body retval)))]
     (println (:status retval) query)
     (filter #(> (Double/parseDouble (:popularity %)) 0.2) (trim-tracks tracks))))
 
