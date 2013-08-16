@@ -1,9 +1,12 @@
 (ns coverme.core
   (:require [clj-http.client :as client]
+            [compojure.route :as route]
+            [compojure.handler :as handler]
             [cheshire.core :as json]
             [clojure.string :as string]
             [clojure.walk :as walk])
-  (:use [clojure.pprint])
+  (:use [compojure.core]
+        [clojure.pprint])
   (:gen-class))
 
 (defn sanitise-title
@@ -86,6 +89,14 @@
     (if rand-song
       (lazy-seq (cons rand-song (generate-playlist-from-artists (:artists rand-song) (:name rand-song))))
       '())))
+
+(defroutes app-routes
+  (GET "/" [] "<h1>Cover Me!</h1>")
+  (route/resources "/")
+  (route/not-found "<h1>Page not found</h1>"))
+
+(def app
+  (handler/site app-routes))
 
 (defn -main
   "I don't do a whole lot."
