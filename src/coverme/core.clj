@@ -12,10 +12,6 @@
       (string/trim)
       (string/replace #"&" "")))
 
-(defn str-to-web
-  [s]
-  (string/join "%20" (string/split s #" ")))
-
 (defn trim-tracks
   [tracks]
   ;; (println)
@@ -41,16 +37,16 @@
 (defn get-tracks
   [q]
   (Thread/sleep 200)
-  (let [query  (str "http://ws.spotify.com/search/1/track.json?q=" q)
+  (let [query  (str "http://ws.spotify.com/search/1/track.json?" q)
         retval (client/get query {:throw-exceptions false})
         tracks (walk/keywordize-keys (second (second (json/parse-string (:body retval)))))]
     (println (:status retval) query)
-    (filter #(> (Double/parseDouble (:popularity %)) 0.20) (trim-tracks tracks))))
+    (filter #(> (Double/parseDouble (:popularity %)) 0.15) (trim-tracks tracks))))
 
 (defn get-tracks-by-artists
   "unique by track name"
   [artists]
-  (->> (str "artist%3a" (str-to-web artists))
+  (->> (client/generate-query-string {"q" (str "artist:" artists)})
       get-tracks
       (unique-tracks :name)
       (filter #(= (:artists %) artists))
@@ -61,7 +57,7 @@
   "unique by artists name"
   [full-title]
   (let [title (sanitise-title full-title)]
-    (->> (str "track%3a" (str-to-web title))
+    (->> (client/generate-query-string {"q" (str "track:" title)})
         get-tracks
         (unique-tracks :artists)
         (filter #(= (:name %) title))
@@ -93,12 +89,14 @@
 (defn -main
   "I don't do a whole lot."
   [& [artists title ntracks]]
-  (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
-        tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
-    (println)
-    (pprint (take 5 tracks-by-artists))
-    (println)
-    (pprint (take 5 tracks-by-name)))
+  ;; (let [tracks-by-artists (get-tracks-by-artists "Nina Simone")
+  ;;       tracks-by-name    (get-tracks-by-title   "I Put A Spell On You")]
+  ;;   (println)
+  ;;   (pprint (take 5 tracks-by-artists))
+  ;;   (println)
+  ;;   (pprint (take 5 tracks-by-name)))
+
+  (println (client/generate-query-string {"q" ":Me & You"}))
 
   (println "\n\n\n")
   (pprint (str artists))
