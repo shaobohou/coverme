@@ -8,7 +8,8 @@
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [clj-http "0.7.6"]
                  [cheshire "5.2.0"]
-                 [compojure "1.1.5"]]
+                 [compojure "1.1.5"]
+                 [hiccup "1.0.4"]]
 
   :plugins [[lein-ring "0.8.5"]]
   :ring {:handler coverme.core/app}

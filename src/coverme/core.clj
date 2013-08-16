@@ -2,6 +2,7 @@
   (:require [clj-http.client :as client]
             [compojure.route :as route]
             [compojure.handler :as handler]
+            [hiccup.form :as form]
             [cheshire.core :as json]
             [clojure.string :as string]
             [clojure.walk :as walk])
@@ -91,7 +92,8 @@
       '())))
 
 (defroutes app-routes
-  (GET "/" [] "<h1>Cover Me!</h1>")
+  (GET "/" [] (str "Cover Me!"))
+  (GET "/:id" [id] (interleave (repeat "\n") (take 10 (generate-playlist-from-artists id "_"))))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
