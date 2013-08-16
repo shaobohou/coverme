@@ -37,7 +37,7 @@
   [tracks]
   ;; (println)
   ;; (pprint (take 3 tracks))
-  (let [groups (group-by #(map % '(:artists :name)) tracks)]
+  (let [groups (group-by #(map string/lower-case (map % '(:artists :name))) tracks)]
     (map (comp first sort-tracks second) groups)))
 
 (defn get-tracks
@@ -79,7 +79,8 @@
 (defn generate-playlist-from-artists
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
-  (let [artists-tracks (take  5 (filter #(not (.startsWith (:name %) title)) (get-tracks-by-artists artists)))
+  (let [artists-tracks (take  5 (filter #(not (.startsWith (string/lower-case (:name %)) (string/lower-case title)))
+                                        (get-tracks-by-artists artists)))
         cover-tracks   (take 25 (sort-tracks (mapcat #(get-cover-tracks % 5) artists-tracks)))
         rand-song      (first (shuffle cover-tracks))]
     (println (count artists-tracks) (count cover-tracks))
