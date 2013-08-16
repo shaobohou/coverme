@@ -24,7 +24,7 @@
                         href (get track "href")]
                     (merge (select-keys track ["name" "popularity"])
                            {"artists" (get artists "name")
-                            ;; "artists-href" (get artists "href")
+                            "artists-href" (get artists "href")
                             "href" (get track "href")
                             })))]
     (map trim-fn tracks)))
@@ -44,9 +44,12 @@
   [q]
   (Thread/sleep 200)
   (let [query  (str "http://ws.spotify.com/search/1/track.json?q=" q)
-        tracks (second (second (json/parse-string (:body (client/get query)))))]
-    ;; (println query)
-    (filter #(> (Double/parseDouble (get % "popularity")) 0.10) (trim-tracks tracks))))
+        retval (client/get query {:throw-exceptions false})
+        ;; _ (pprint (keys retval))
+        _ (pprint (:status retval))
+        tracks (second (second (json/parse-string (:body retval))))]
+    (println query)
+    (filter #(> (Double/parseDouble (get % "popularity")) 0.20) (trim-tracks tracks))))
 
 (defn get-tracks-by-artists
   "unique by track name"
@@ -73,19 +76,19 @@
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
   (let [artists-tracks (take 5 (filter #(not (.startsWith (get % "name") title)) (get-tracks-by-artists artists)))
-        cover-tracks  (sort-tracks (apply concat (map (fn [track] (->> (get track "name")
+        cover-tracks   (sort-tracks (apply concat (map (fn [track] (->> (get track "name")
                                                                         get-tracks-by-title
                                                                         (filter #(not= (get % "artists") artists))
                                                                         (take 5)))
                                                        artists-tracks)))
-        rand-song   (first (shuffle (take 5 cover-tracks))) ;; different song by a different artist
-        new-artists (get rand-song "artists")
-        new-title   (get rand-song "name")]
-    (println new-title " BY " artists " WAS ALSO COVERED BY " new-artists)
-    (pprint rand-song)
-    (println)
-    (lazy-seq (cons rand-song
-                    (generate-playlist-from-artists new-artists (sanitise-title new-title))))))
+        rand-song   (first (shuffle (take 5 cover-tracks)))]
+    (when rand-song
+      (println (get rand-song "name") " BY " artists " WAS ALSO COVERED BY " (get rand-song "artists"))
+      (pprint rand-song)
+      (println))
+    (if rand-song
+      (lazy-seq (cons rand-song (generate-playlist-from-artists (get rand-song "artists") (sanitise-title (get rand-song "name")))))
+      '())))
 
 (defn -main
   "I don't do a whole lot."
@@ -105,7 +108,7 @@
   (println (sanitise-title "Secret Crush (feat. Jeff Lorber)"))
   (println (sanitise-title "Secret Crush - Blah"))
   (println (sanitise-title "Secret Crush / Blah"))
-  (generate-playlist-from-artists "Nina Simone" "_")
+  ;; (generate-playlist-from-artists "Nina Simone" "_")
   (println "\n\n\n")
   (let [retval (take (Integer/parseInt ntracks) (generate-playlist-from-artists artists title))]
     (pprint (count retval)))
