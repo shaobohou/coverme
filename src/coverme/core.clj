@@ -41,7 +41,7 @@
         retval (client/get query {:throw-exceptions false})
         tracks (walk/keywordize-keys (second (second (json/parse-string (:body retval)))))]
     (println (:status retval) query)
-    (filter #(> (Double/parseDouble (:popularity %)) 0.15) (trim-tracks tracks))))
+    (filter #(> (Double/parseDouble (:popularity %)) 0.2) (trim-tracks tracks))))
 
 (defn get-tracks-by-artists
   "unique by track name"
@@ -75,7 +75,7 @@
   "Given an artist and a song. Find a more popular/different song by the same artist. Find a different artist that covers the song. Repeat the with new artist and song"
   [artists title]
   (let [artists-tracks (take  5 (filter #(not (.startsWith (:name %) title)) (get-tracks-by-artists artists)))
-        cover-tracks   (take 25 (sort-tracks (apply concat (map #(get-cover-tracks % 5) artists-tracks))))
+        cover-tracks   (take 25 (sort-tracks (mapcat #(get-cover-tracks % 5) artists-tracks)))
         rand-song      (first (shuffle cover-tracks))]
     (println (count artists-tracks) (count cover-tracks))
     (when rand-song
