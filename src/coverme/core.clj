@@ -17,10 +17,12 @@
   ;; (println)
   ;; (pprint (take 3 tracks))
   (let [trim-fn (fn [track] (let [artists (first (:artists track))]
-                              (merge (select-keys track [:name :popularity])
-                                     {:artists (:name artists)
-                                      :artists-href (:href artists)
-                                      :href (:href track)})))]
+                              {:artists (:name artists)
+                               :artists-href (:href artists)
+                               :name (sanitise-title (:name track))
+                               :name-raw (:name track)
+                               :href (:href track)
+                               :popularity (:popularity track)}))]
     (map trim-fn tracks)))
 
 (defn sort-tracks
@@ -28,10 +30,10 @@
   (reverse (sort-by :popularity tracks)))
 
 (defn unique-tracks
-  [field tracks]
+  [tracks]
   ;; (println)
   ;; (pprint (take 3 tracks))
-  (let [groups (group-by field tracks)]
+  (let [groups (group-by #(map % '(:artists :name)) tracks)]
     (map (comp first sort-tracks second) groups)))
 
 (defn get-tracks
@@ -48,7 +50,7 @@
   [artists]
   (->> (client/generate-query-string {"q" (str "artist:" artists)})
       get-tracks
-      (unique-tracks :name)
+      unique-tracks
       (filter #(= (:artists %) artists))
       (map #(assoc % :artists artists))
       sort-tracks))
@@ -59,7 +61,7 @@
   (let [title (sanitise-title full-title)]
     (->> (client/generate-query-string {"q" (str "track:" title)})
         get-tracks
-        (unique-tracks :artists)
+        unique-tracks
         (filter #(= (:name %) title))
         (map #(assoc % :name title))
         sort-tracks)))
