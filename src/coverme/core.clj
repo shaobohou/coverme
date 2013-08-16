@@ -57,14 +57,13 @@
 
 (defn get-tracks-by-title
   "unique by artists name"
-  [full-title]
-  (let [title (sanitise-title full-title)]
-    (->> (client/generate-query-string {"q" (str "track:" title)})
-        get-tracks
-        unique-tracks
-        (filter #(= (:name %) title))
-        (map #(assoc % :name title))
-        sort-tracks)))
+  [title]
+  (->> (client/generate-query-string {"q" (str "track:" title)})
+       get-tracks
+       unique-tracks
+       (filter #(= (:name %) title))
+       (map #(assoc % :name title))
+       sort-tracks))
 
 (defn get-cover-tracks
   [track n]
@@ -85,7 +84,7 @@
       (pprint rand-song)
       (println))
     (if rand-song
-      (lazy-seq (cons rand-song (generate-playlist-from-artists (:artists rand-song) (sanitise-title (:name rand-song)))))
+      (lazy-seq (cons rand-song (generate-playlist-from-artists (:artists rand-song) (:name rand-song))))
       '())))
 
 (defn -main
