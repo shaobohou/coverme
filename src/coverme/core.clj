@@ -7,6 +7,7 @@
             [clojure.string :as string]
             [clojure.walk :as walk])
   (:use [compojure.core]
+        [hiccup.core]
         [clojure.pprint])
   (:gen-class))
 
@@ -81,7 +82,7 @@
   [artists title]
   (let [artists-tracks (take  5 (filter #(not (.startsWith (string/lower-case (:name %)) (string/lower-case title)))
                                         (get-tracks-by-artists artists)))
-        cover-tracks   (take 25 (sort-tracks (mapcat #(get-cover-tracks % 5) artists-tracks)))
+        cover-tracks   (take  5 (sort-tracks (mapcat #(get-cover-tracks % 5) artists-tracks)))
         rand-song      (first (shuffle cover-tracks))]
     (println (count artists-tracks) (count cover-tracks))
     (when rand-song
@@ -92,14 +93,32 @@
       (lazy-seq (cons rand-song (generate-playlist-from-artists (:artists rand-song) (:name rand-song))))
       '())))
 
+(defn format-playlist
+  [tracks]
+  (->> tracks
+       (map #(html [:a {:href (:href %)} (:name-raw %)] "<br>"
+                   "by " [:a {:href (:artists-href %)} (:artists %)] "<br>"
+                   [:a {:href (:href %)} (:href %)]))
+       (interpose "<p>")))
+
+(defn wrap-exceptions [app]
+  (fn [req] (try (app req)
+                 (catch IllegalArgumentException err
+                   {:status 400 :body (.getMessage err)})
+                 (catch Exception err
+                   {:status 500 :body (.getMessage err)}))))
+
 (defroutes app-routes
   (GET "/" [] (str "Cover Me!"))
-  (GET "/:id" [id] (interpose "<p>" (take 10 (generate-playlist-from-artists id "_"))))
+  (GET "/cover" {{artist :artist track :track maxlen :maxlen} :params}
+       (format-playlist (take (Integer/parseInt maxlen) (generate-playlist-from-artists artist track))))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
 (def app
-  (handler/site app-routes))
+  (-> app-routes
+      handler/site
+      wrap-exceptions))
 
 (defn -main
   "I don't do a whole lot."
