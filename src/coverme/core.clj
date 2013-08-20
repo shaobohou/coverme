@@ -5,7 +5,8 @@
             [hiccup.form :as form]
             [cheshire.core :as json]
             [clojure.string :as string]
-            [clojure.walk :as walk])
+            [clojure.walk :as walk]
+            [clj-time.core :as time])
   (:use [compojure.core]
         [hiccup.core]
         [hiccup.form :only (form-to label text-area text-field submit-button)]
@@ -102,12 +103,12 @@
                    [:a {:href (:href %)} (:href %)]))
        (interpose "<p>")))
 
-(defn wrap-exceptions [app]
-  (fn [req] (try (app req)
-                 (catch IllegalArgumentException err
-                   {:status 400 :body (.getMessage err)})
-                 (catch Exception err
-                   {:status 500 :body (.getMessage err)}))))
+(defn generate-playlist
+  [artist track maxlen]
+  (spit "coverme.log" (string/join " " [(time/now) artist track maxlen "\n"]) :append true)
+  (take (Integer/parseInt (if (empty? maxlen) "10" maxlen))
+        (generate-playlist-from-artists (if (empty? artist) "Nina Simone" artist)
+                                        (if (empty? track) "???" track))))
 
 (defroutes app-routes
   (GET "/" [] (html [:div {:id "coverme-form" :class "coverme"}
@@ -123,11 +124,16 @@
                               [:br]
                               (submit-button "Cover Me!"))]))
   (GET "/cover" {{artist :artist track :track maxlen :maxlen} :params}
-       (format-playlist (take (Integer/parseInt (if (empty? maxlen) "10" maxlen))
-                              (generate-playlist-from-artists (if (empty? artist) "Nina Simone" artist)
-                                                              (if (empty? track) "???" track)))))
+       (format-playlist (generate-playlist artist track maxlen)))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
+
+(defn wrap-exceptions [app]
+  (fn [req] (try (app req)
+                 (catch IllegalArgumentException err
+                   {:status 400 :body (.getMessage err)})
+                 (catch Exception err
+                   {:status 500 :body (.getMessage err)}))))
 
 (def app
   (-> app-routes

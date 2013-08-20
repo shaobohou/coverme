@@ -9,7 +9,8 @@
                  [clj-http "0.7.6"]
                  [cheshire "5.2.0"]
                  [compojure "1.1.5"]
-                 [hiccup "1.0.4"]]
+                 [hiccup "1.0.4"]
+                 [clj-time "0.5.1"]]
 
   :plugins [[lein-ring "0.8.5"]]
   :ring {:handler coverme.core/app}
