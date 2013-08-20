@@ -8,6 +8,7 @@
             [clojure.walk :as walk])
   (:use [compojure.core]
         [hiccup.core]
+        [hiccup.form :only (form-to label text-area submit-button)]
         [clojure.pprint])
   (:gen-class))
 
@@ -96,8 +97,8 @@
 (defn format-playlist
   [tracks]
   (->> tracks
-       (map #(html [:a {:href (:href %)} (:name-raw %)] "<br>"
-                   "by " [:a {:href (:artists-href %)} (:artists %)] "<br>"
+       (map #(html [:a {:href (:href %)} (:name-raw %)] [:br]
+                   "by " [:a {:href (:artists-href %)} (:artists %)] [:br]
                    [:a {:href (:href %)} (:href %)]))
        (interpose "<p>")))
 
@@ -109,7 +110,18 @@
                    {:status 500 :body (.getMessage err)}))))
 
 (defroutes app-routes
-  (GET "/" [] (str "Cover Me!"))
+  (GET "/" [] (html [:div {:id "coverme-form" :class "sixteen columns alpha omega"}
+                     (form-to [:get "/cover"]
+                              (text-area "artist" "Nina Simone")
+                              (label "artist" "Artist")
+                              [:br]
+                              (text-area "track" "???")
+                              (label "track" "Track")
+                              [:br]
+                              (text-area "maxlen" "10")
+                              (label "maxlen" "Num. Songs")
+                              [:br]
+                              (submit-button "Cover Me!"))]))
   (GET "/cover" {{artist :artist track :track maxlen :maxlen} :params}
        (format-playlist (take (Integer/parseInt maxlen) (generate-playlist-from-artists artist track))))
   (route/resources "/")
