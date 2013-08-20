@@ -15,6 +15,7 @@ FIXME
  * prevent repeats
  * log results in mongodb, also learn exclusion list for non-covers
  * retry on bad gateway and other http errors
+ * add initial song
 
 ## License
 
