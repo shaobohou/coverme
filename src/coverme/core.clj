@@ -123,7 +123,9 @@
                               [:br]
                               (submit-button "Cover Me!"))]))
   (GET "/cover" {{artist :artist track :track maxlen :maxlen} :params}
-       (format-playlist (take (Integer/parseInt maxlen) (generate-playlist-from-artists artist track))))
+       (format-playlist (take (Integer/parseInt (if (empty? maxlen) "10" maxlen))
+                              (generate-playlist-from-artists (if (empty? artist) "Nina Simone" artist)
+                                                              (if (empty? track) "???" track)))))
   (route/resources "/")
   (route/not-found "<h1>Page not found</h1>"))
 
