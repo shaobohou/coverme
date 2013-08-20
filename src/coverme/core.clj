@@ -8,7 +8,7 @@
             [clojure.walk :as walk])
   (:use [compojure.core]
         [hiccup.core]
-        [hiccup.form :only (form-to label text-area submit-button)]
+        [hiccup.form :only (form-to label text-area text-field submit-button)]
         [clojure.pprint])
   (:gen-class))
 
@@ -110,15 +110,15 @@
                    {:status 500 :body (.getMessage err)}))))
 
 (defroutes app-routes
-  (GET "/" [] (html [:div {:id "coverme-form" :class "sixteen columns alpha omega"}
+  (GET "/" [] (html [:div {:id "coverme-form" :class "coverme"}
                      (form-to [:get "/cover"]
-                              (text-area "artist" "Nina Simone")
+                              (text-field "artist" "Nina Simone")
                               (label "artist" "Artist")
                               [:br]
-                              (text-area "track" "???")
+                              (text-field "track" "???")
                               (label "track" "Track")
                               [:br]
-                              (text-area "maxlen" "10")
+                              (text-field "maxlen" "10")
                               (label "maxlen" "Num. Songs")
                               [:br]
                               (submit-button "Cover Me!"))]))
