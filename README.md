@@ -1,6 +1,6 @@
 # coverme
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure app for generate cover song chains using the spotify API
 
 ## Usage
 
@@ -13,7 +13,7 @@ FIXME
  * allow query via artist name, track name or spotify uri
  * favour more popular songs
  * prevent repeats
- * search artist tracks by artist href
+ * log results in mongodb, also learn exclusion list for non-covers
 
 ## License
 
