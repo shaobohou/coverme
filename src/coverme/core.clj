@@ -43,11 +43,21 @@
   (let [groups (group-by #(map string/lower-case (map % '(:artists :name))) tracks)]
     (map (comp first sort-tracks second) groups)))
 
+(defn get-with-retry
+  [query nretry]
+  (let [     tries (repeatedly nretry #(client/get query {:throw-exceptions false}))
+         bad-tries (take-while #(not= 200 (:status %)) tries)
+        good-tries (drop-while #(not= 200 (:status %)) tries)]
+    (when (pos? (count bad-tries)) (println "TRIED" (inc (count bad-tries)) "TIMES FOR " query))
+    (if (empty? good-tries)
+      (last   bad-tries)
+      (first good-tries))))
+
 (defn get-tracks
   [q]
   (Thread/sleep 200)
   (let [query  (str "http://ws.spotify.com/search/1/track.json?" q)
-        retval (client/get query {:throw-exceptions false})
+        retval (get-with-retry query 5)
         {:keys [info tracks]} (walk/keywordize-keys (json/parse-string (:body retval)))]
     (println (:status retval) query)
     (filter #(> (Double/parseDouble (:popularity %)) 0.2) (trim-tracks tracks))))
